@@ -11,7 +11,7 @@ This project aims to build an automated system for segmenting blood vessels in s
 ![After predict](after_pred.png)
 
 ## Demo
-For a quick demo, please visit this website: https://humanvasculature-fehopwpmus7frpakvv2ngt.streamlit.app/
+For a quick demo, please visit this website: https://humanvasculature-amxhm7mfms3kk66dhahcqs.streamlit.app/
 You can upload an image in `.tif` format in the `val` directory and see the result.
 
 ## Data prepartion
