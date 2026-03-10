@@ -1,8 +1,9 @@
-tqdm
-numpy
-ultralytics
-pycocotools
-torch
 streamlit
+ultralytics
+torch
+numpy
 opencv-python-headless
 gdown
+tqdm
+pycocotools
+Pillow
