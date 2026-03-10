@@ -1,5 +1,4 @@
 freeglut3-dev
-libgtk2.0-dev
 libgl1
 libglib2.0-0
 tesseract-ocr
