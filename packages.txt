@@ -1,4 +1,4 @@
 libgl1
 libglib2.0-0
-libffi7
-libpcre3
+libffi8
+libpcre2-8-0
