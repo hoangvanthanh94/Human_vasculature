@@ -5,54 +5,133 @@ import cv2
 import gdown
 import os
 import time
+import numpy as np
 
+# =========================
+# Download model nếu chưa có
+# =========================
 url = "https://drive.google.com/uc?id=1xZL5HjrVFsp4Zu6osnc_btM1NfiBcoop"
 model_path = "best.pt"
+
 if not os.path.exists(model_path):
     gdown.download(url, model_path, quiet=False)
 
-def main():
-    st.title("Human Vasculature Image Segmentation")
-    
-    # Choose img to test
-    val_path = "val"
-    image_files = os.listdir(val_path)
-    st.header("Select an image to see the prediction or upload an image below")
-    selected_image = st.selectbox("", image_files)
-    image_path = os.path.join(val_path, selected_image)
-    image = Image.open(image_path)
-    st.image(image, caption="Test image", use_column_width=True)
-    predict(model_path=model_path, image=image)
-
-    st.header("Upload an image to get prediction")
-    uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "tif"])
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        st.image(image, caption='Image before predict', use_column_width=True)      
-        predict(model_path=model_path, image=image)
-
-# Load YOLO model
+# =========================
+# Load model (chỉ load 1 lần)
+# =========================
 @st.cache_resource
 def load_model():
     return YOLO(model_path)
 
+model = load_model()
 
-def predict(model_path, image):
-    start = time.time()                
-    # Perform object detection
-    model = load_model()
-    history = model.predict(image)[0]
-    image_after_pred = history.plot()
-    
-    # Save and Display the image
-    os.makedirs("data_cus/result", exist_ok=True)
-    save_path = 'data_cus/result/image_pred.png'
-    cv2.imwrite(save_path, image_after_pred)
+# =========================
+# Predict function
+# =========================
+def predict(image):
+
+    start = time.time()
+
+    results = model.predict(image)[0]
+    image_pred = results.plot()
+
+    # tạo thư mục lưu kết quả
+    os.makedirs("results", exist_ok=True)
+
+    # tạo tên file theo timestamp
+    filename = f"results/pred_{int(time.time())}.png"
+
+    cv2.imwrite(filename, image_pred)
+
     end = time.time()
-    pred_time = end - start
-    with st.spinner("Running"):
-        time.sleep(pred_time)
-        st.image(image_after_pred, caption="Prediction result", use_column_width=True)
+    pred_time = round(end - start, 2)
 
+    return image_pred, filename, pred_time
+
+
+# =========================
+# Main UI
+# =========================
+def main():
+
+    st.title("Human Vasculature Image Segmentation")
+
+    # =========================
+    # Test images
+    # =========================
+    val_path = "val"
+
+    if os.path.exists(val_path):
+
+        image_files = os.listdir(val_path)
+
+        if image_files:
+
+            st.header("Select a test image")
+
+            selected_image = st.selectbox("Test images", image_files)
+
+            image_path = os.path.join(val_path, selected_image)
+
+            image = Image.open(image_path)
+
+            st.image(image, caption="Original image", use_column_width=True)
+
+            if st.button("Predict test image"):
+
+                with st.spinner("Running prediction..."):
+
+                    pred_img, save_path, pred_time = predict(image)
+
+                st.image(pred_img, caption="Prediction result", use_column_width=True)
+
+                st.success(f"Prediction time: {pred_time} seconds")
+
+                with open(save_path, "rb") as file:
+                    st.download_button(
+                        label="Download result",
+                        data=file,
+                        file_name="prediction.png",
+                        mime="image/png"
+                    )
+
+    # =========================
+    # Upload image
+    # =========================
+    st.header("Upload an image")
+
+    uploaded_file = st.file_uploader(
+        "Upload image",
+        type=["jpg", "jpeg", "png", "tif"]
+    )
+
+    if uploaded_file:
+
+        image = Image.open(uploaded_file)
+
+        st.image(image, caption="Uploaded image", use_column_width=True)
+
+        if st.button("Predict uploaded image"):
+
+            with st.spinner("Running prediction..."):
+
+                pred_img, save_path, pred_time = predict(image)
+
+            st.image(pred_img, caption="Prediction result", use_column_width=True)
+
+            st.success(f"Prediction time: {pred_time} seconds")
+
+            with open(save_path, "rb") as file:
+                st.download_button(
+                    label="Download result",
+                    data=file,
+                    file_name="prediction.png",
+                    mime="image/png"
+                )
+
+
+# =========================
+# Run app
+# =========================
 if __name__ == "__main__":
     main()
