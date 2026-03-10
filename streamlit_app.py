@@ -31,15 +31,21 @@ def main():
         st.image(image, caption='Image before predict', use_column_width=True)      
         predict(model_path=model_path, image=image)
 
+# Load YOLO model
+@st.cache_resource
+def load_model():
+    return YOLO(model_path)
+
+
 def predict(model_path, image):
     start = time.time()                
-    # Load YOLO model
-    model = YOLO(model_path)            
     # Perform object detection
+    model = load_model()
     history = model.predict(image)[0]
     image_after_pred = history.plot()
     
     # Save and Display the image
+    os.makedirs("data_cus/result", exist_ok=True)
     save_path = 'data_cus/result/image_pred.png'
     cv2.imwrite(save_path, image_after_pred)
     end = time.time()
